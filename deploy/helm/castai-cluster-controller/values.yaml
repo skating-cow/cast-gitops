@@ -50,14 +50,14 @@ castai:
   # castai.apiKeySecretRef -- Name of secret with Token to be used for authorizing agent access to the API
   # apiKey and apiKeySecretRef are mutually exclusive
   # The referenced secret must provide the token in .data["API_KEY"].
-  apiKeySecretRef: ""
+  apiKeySecretRef: "apikey-secret"
 
   # castai.apiURL -- CASTAI public api url.
   apiURL: "https://api.cast.ai"
 
   # castai.clusterID -- CASTAI Cluster unique identifier.
   # clusterID and clusterIdSecretKeyRef are mutually exclusive
-  clusterID: "apikey-secret"
+  clusterID: ""
   # clusterIdSecretKeyRef -- Name and Key of secret with ClusterID
   # The referenced secret must provide the ClusterID in .data[<<.Values.castai.clusterIdSecretKeyRef.key>>]
   clusterIdSecretKeyRef:

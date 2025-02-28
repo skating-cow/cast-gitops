@@ -1,7 +1,0 @@
-apiVersion: v2
-name: cluster-controller
-description: "CAST AI Controller"
-dependencies:
-  - name: castai-helm/castai-cluster-controller
-    version: "0.80.2"
-    repository: "https://charts.cast.ai"

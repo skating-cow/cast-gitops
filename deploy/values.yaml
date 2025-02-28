@@ -1,4 +1,0 @@
-castai:
-  apiKeySecretRef: "apikey-secret"
-  clusterIdSecretKeyRef:
-    name: "clusterid-secret"

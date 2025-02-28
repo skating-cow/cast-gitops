@@ -1,0 +1,171 @@
+# Default values for castai-cluster-controller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# replicas -- Number of replicas for castai-cluster-controller deployment.
+replicas: 2
+pdbMinAvailable: 1
+# leaderElectionEnabled -- When running 2+ replicas of castai-cluster-controller only one should work as a leader.
+leaderElectionEnabled: true
+leaderElectionLeaseDuration: 15s
+leaderElectionRenewDeadline: 10s
+
+# commonLabels -- Labels to add to all resources.
+commonLabels: {}
+
+# commonAnnotations -- Annotations to add to all resources.
+commonAnnotations: {}
+
+nameOverride: ""
+fullnameOverride: castai-cluster-controller
+
+# createNamespace -- By default namespace is expected to be created by castai-agent.
+createNamespace: false
+
+image:
+  repository: us-docker.pkg.dev/castai-hub/library/cluster-controller
+  # image.tag -- Tag is set using Chart.yaml appVersion field.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: {}
+
+# updateStrategy -- Controls `deployment.spec.strategy` field.
+updateStrategy:
+  type: RollingUpdate
+
+# trustedCACert -- CA certificate to add to the set of root certificate authorities that the client will use when verifying server certificates.
+trustedCACert: ""
+
+# trustedCACertSecretRef -- Name of secret with CA certificate to be added to the set of root certificate authorities that the client will use when verifying server certificates.
+# trustedCACert and trustedCACertSecretRef are mutually exclusive.
+# The referenced secret must provide the certificate in .data["TLS_CA_CERT_FILE"].
+trustedCACertSecretRef: ""
+
+# castai -- CAST AI API configuration.
+castai:
+  # castai.apiKey -- Token to be used for authorizing agent access to the CASTAI API.
+  apiKey: ""
+
+  # castai.apiKeySecretRef -- Name of secret with Token to be used for authorizing agent access to the API
+  # apiKey and apiKeySecretRef are mutually exclusive
+  # The referenced secret must provide the token in .data["API_KEY"].
+  apiKeySecretRef: ""
+
+  # castai.apiURL -- CASTAI public api url.
+  apiURL: "https://api.cast.ai"
+
+  # castai.clusterID -- CASTAI Cluster unique identifier.
+  # clusterID and clusterIdSecretKeyRef are mutually exclusive
+  clusterID: "apikey-secret"
+  # clusterIdSecretKeyRef -- Name and Key of secret with ClusterID
+  # The referenced secret must provide the ClusterID in .data[<<.Values.castai.clusterIdSecretKeyRef.key>>]
+  clusterIdSecretKeyRef:
+    name: "clusterid-secret"
+    key: "CLUSTER_ID"
+
+# podAnnotations -- Annotations added to each pod.
+podAnnotations: {}
+# podLabels - Labels added to each pod.
+podLabels: {}
+
+# additionalEnv -- Env variables passed to castai-cluster-controller.
+additionalEnv:
+  LOG_LEVEL: "5"
+  MONITOR_METADATA: "/controller-metadata/metadata"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 100Mi
+  limits:
+    memory: 1Gi
+
+monitor:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Pod toleration rules.
+# Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: {}
+
+# Pod node selector rules.
+# Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+nodeSelector: {}
+
+# List of additional pod antiaffinity which can be ignored
+enableTopologySpreadConstraints: false
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: castai-cluster-controller
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/os
+              operator: NotIn
+              values:
+                - windows
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - castai-cluster-controller
+        topologyKey: kubernetes.io/hostname
+
+# Pod security context.
+# Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+# https://github.com/GoogleContainerTools/distroless/blob/530158861eebdbbf149f7e7e67bfe45eb433a35c/common/variables.bzl#L18
+# securityContext -- User 65532 is non-root user for gcr distorless images
+securityContext:
+  runAsNonRoot: true
+  fsGroup: 65532
+  runAsGroup: 65532
+  runAsUser: 65532
+
+serviceAccount:
+  create: true
+  # Annotations to add to the service account.
+  annotations: {}
+  name: "castai-cluster-controller"
+
+hostNetwork:
+  # Enable host networking
+  enabled: false
+
+# dnsPolicy -- DNS Policy Override - Needed when using some custom CNI's.
+dnsPolicy: ""
+
+# priorityClass -- K8s priority class of castai-cluster-controller
+priorityClass:
+  enabled: true
+  name: system-cluster-critical
+
+# k8sApiClient -- Settings for configuring k8s client used in castai-cluster-controller.
+k8sApiClient:
+  # rateLimit -- Client uses token based rate limiting. By default, client has 200 api request burst limit set.
+  # Buffer is refilled with 100 tokens every second. During sustained load client will be capped at 100 requests / sec.
+  rateLimit:
+    burst: 200
+    qps: 100
+
+# workloadManagement -- Settings for managing deployments and other pod controllers.
+workloadManagement:
+  # workloadManagement.enabled -- Adds permissions to patch deployments.
+  enabled: false
+
+# autoscaling -- Settings for managing autoscaling features.
+autoscaling:
+  # autoscaling.enabled -- Adds permissions to manage autoscaling.
+  enabled: true

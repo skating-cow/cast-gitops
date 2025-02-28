@@ -1,3 +1,4 @@
+managedByCASTAI: false
 castai:
   apiURL: "https://api.cast.ai"
   grpcURL: "grpc.cast.ai:443"
